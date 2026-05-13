@@ -6,7 +6,7 @@ import { DICE_CONFIG } from "../config/index.js";
 import { db } from "../db/client.js";
 import { AppError } from "../middleware/errorHandler.js";
 
-export const gameRouter = Router();
+export const gameRouter: Router = Router();
 
 // ── Validation Schemas ────────────────────────────────────────────────────────
 

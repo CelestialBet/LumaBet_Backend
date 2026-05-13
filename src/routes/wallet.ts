@@ -4,7 +4,7 @@ import { getBalance, isValidPublicKey } from "../lib/stellar-client/index.js";
 import { NetworkType } from "../types/index.js";
 import { AppError } from "../middleware/errorHandler.js";
 
-export const walletRouter = Router();
+export const walletRouter: Router = Router();
 
 const BalanceParams = z.object({
   publicKey: z.string().min(56).max(56),

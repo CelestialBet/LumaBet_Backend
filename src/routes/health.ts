@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../db/client.js";
 import { HealthResponse } from "../types/index.js";
 
-export const healthRouter = Router();
+export const healthRouter: Router = Router();
 
 healthRouter.get("/", async (_req, res) => {
   const health: HealthResponse = {
