@@ -7,6 +7,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { healthRouter } from "./routes/health.js";
 import { gameRouter } from "./routes/game.js";
 import { walletRouter } from "./routes/wallet.js";
+import { playerRouter } from "./routes/player.js";
 
 export function createServer(): Express {
   const app = express();
@@ -39,6 +40,7 @@ export function createServer(): Express {
   app.use("/health", healthRouter);
   app.use("/game", gameRouter);
   app.use("/wallet", walletRouter);
+  app.use("/player", playerRouter);
 
   // 404 handler
   app.use((_req, res) => {
