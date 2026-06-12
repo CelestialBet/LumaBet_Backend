@@ -12,7 +12,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,json}\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^12.3.0",
