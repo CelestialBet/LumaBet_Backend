@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { submitTransaction } from "../lib/stellar-client/index.js";
+import { submitTransaction, buildPaymentTransaction } from "../lib/stellar-client/index.js";
 import { NetworkType, BetStatus, GameType } from "../types/index.js";
 import { DICE_CONFIG } from "../config/index.js";
 import { db } from "../db/client.js";
@@ -33,6 +33,44 @@ const HistoryQuerySchema = z.object({
   status: z.nativeEnum(BetStatus).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
+});
+
+const PrepareSchema = z.object({
+  playerPublicKey: z.string().length(56),
+  amountXlm: z
+    .string()
+    .regex(/^\d+(\.\d{1,7})?$/, "Invalid XLM amount")
+    .refine((v) => parseFloat(v) >= parseFloat(DICE_CONFIG.minBetXlm), `Minimum bet is ${DICE_CONFIG.minBetXlm} XLM`)
+    .refine((v) => parseFloat(v) <= parseFloat(DICE_CONFIG.maxBetXlm), `Maximum bet is ${DICE_CONFIG.maxBetXlm} XLM`),
+  prediction: z.number().int().min(1).max(6),
+});
+
+// ── POST /game/dice/prepare — Build unsigned transaction for the player to sign
+
+gameRouter.post("/dice/prepare", async (req, res, next) => {
+  try {
+    const body = PrepareSchema.parse(req.body);
+    const network = (process.env["STELLAR_NETWORK"] as NetworkType) ?? NetworkType.TESTNET;
+
+    const coreContractId = process.env["LUMABET_CORE_CONTRACT_ID"];
+    if (!coreContractId) {
+      throw new AppError(503, "Core contract not configured — set LUMABET_CORE_CONTRACT_ID", "CONTRACT_NOT_CONFIGURED");
+    }
+
+    // Build a payment transaction to the contract escrow address.
+    // The memo encodes game type and prediction for the resolver.
+    const xdr = await buildPaymentTransaction(
+      body.playerPublicKey,
+      coreContractId,
+      body.amountXlm,
+      `DICE:${body.prediction}`,
+      network
+    );
+
+    res.json({ xdr, contractId: coreContractId });
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ── POST /game/dice — Place a dice bet ────────────────────────────────────────

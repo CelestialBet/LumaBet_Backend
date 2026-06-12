@@ -1,5 +1,6 @@
 import {
   Horizon,
+  Memo,
   Networks,
   TransactionBuilder,
   Operation,
@@ -101,7 +102,7 @@ export async function buildPaymentTransaction(
     .setTimeout(STELLAR_TX_TIMEOUT_SECONDS);
 
   if (memo) {
-    builder.addMemo({ type: "text", value: memo } as never);
+    builder.addMemo(Memo.text(memo));
   }
 
   return builder.build().toXDR();

@@ -20,9 +20,8 @@ export async function getBalance(
   const nativeBalance = account.balances.find((b) => b.asset_type === "native");
 
   const xlmBalance = nativeBalance?.balance ?? "0";
-  const xlmBalanceStroops = (
-    BigInt(Math.floor(parseFloat(xlmBalance) * 10_000_000))
-  ).toString();
+  // Use string-based xlmToStroops to avoid float precision loss
+  const xlmBalanceStroops = xlmToStroops(xlmBalance).toString();
 
   return {
     publicKey,
