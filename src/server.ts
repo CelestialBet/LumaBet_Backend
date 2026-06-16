@@ -1,13 +1,15 @@
 import express, { Express } from "express";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import { corsMiddleware } from "./middleware/cors.js";
 import { requestLogger } from "./middleware/logger.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { globalLimiter } from "./middleware/security.js";
 import { healthRouter } from "./routes/health.js";
 import { gameRouter } from "./routes/game.js";
 import { walletRouter } from "./routes/wallet.js";
 import { playerRouter } from "./routes/player.js";
+import { coinFlipRouter } from "./routes/coinflip.js";
+import { apiRouter } from "./routes/api.js";
 
 export function createServer(): Express {
   const app = express();
@@ -25,20 +27,14 @@ export function createServer(): Express {
   // Request logging
   app.use(requestLogger);
 
-  // Rate limiting
-  app.use(
-    rateLimit({
-      windowMs: 60_000,
-      max: 100,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { error: "Too many requests, please try again later." },
-    })
-  );
+  // Global rate limiting (100 req / 15 min per IP)
+  app.use(globalLimiter);
 
   // Routes
   app.use("/health", healthRouter);
   app.use("/game", gameRouter);
+  app.use("/game/coinflip", coinFlipRouter);
+  app.use("/api/games", apiRouter);
   app.use("/wallet", walletRouter);
   app.use("/player", playerRouter);
 

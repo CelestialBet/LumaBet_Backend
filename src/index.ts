@@ -1,6 +1,9 @@
 import "dotenv/config";
+import { validateEnv } from "./middleware/security.js";
 import { createServer } from "./server.js";
 import { db } from "./db/client.js";
+
+validateEnv(); // fails fast if required env vars are absent
 
 const PORT = parseInt(process.env["PORT"] ?? "3001", 10);
 
