@@ -85,18 +85,34 @@ Player → place_bet() → XLM locked in lumabet_core contract
 
 ## Data Flow: Placing a Dice Bet
 
+Each on-chain call below requires the player's signature (`require_auth`), so
+the flow is four round-trips rather than one — the API never holds a key
+capable of moving funds:
+
 ```
 1. Player opens Dice page, selects prediction (1–6) and amount
-2. Frontend calls POST /game/dice/prepare → API returns unsigned XDR
-3. Frontend passes XDR to Freighter → player signs → returns signedXdr
-4. Frontend calls POST /game/dice with signedXdr
-5. API submits signedXdr to Stellar RPC via stellar-client
-6. Soroban: lumabet_core.place_bet() locks XLM
-7. Soroban: lumabet_dice.roll_dice() → lumabet_rng.generate_random()
-8. Soroban: lumabet_core.resolve_bet() → pays winner
-9. API receives tx confirmation, writes bet record to PostgreSQL
-10. Frontend polls /game/history or receives WebSocket push (future)
+2. Frontend calls POST /api/games/dice/place   → API builds core.place_bet()
+   XDR, stores a 'building' row in dice_bets, returns { placeXdr, betDbId }
+3. Player signs placeXdr with Freighter
+4. Frontend calls POST /api/games/dice/roll    → API submits placeXdr,
+   reads the on-chain bet_id from the return value, builds dice.roll_dice()
+   XDR (with a fresh random seed), returns { rollXdr }
+5. Player signs rollXdr with Freighter
+6. Frontend calls POST /api/games/dice/resolve → API submits rollXdr,
+   reads { outcome, won } from the DiceRoll return value, builds
+   dice.claim_winnings() (won) or dice.resolve_lost_bet() (lost) XDR
+7. Player signs the resolve XDR with Freighter
+8. Frontend calls POST /api/games/dice/finalize → API submits it,
+   lumabet_dice calls lumabet_core.resolve_bet() which pays the winner,
+   API records the final status + payout in dice_bets
+9. Frontend polls /api/games/dice/history or /api/games/dice/status/:address
 ```
+
+Note: `/game/dice` and `/game/dice/prepare` (in `src/routes/game.ts`) predate
+this integration — they build a plain payment transaction rather than
+invoking the real contracts and never resolve the bet. They are kept for
+backward compatibility with the existing frontend `Dice` page but should be
+migrated to the flow above.
 
 ---
 

@@ -16,7 +16,8 @@ export type ScArg =
   | { type: "bytes"; value: Buffer }
   | { type: "i128"; value: bigint }
   | { type: "u64"; value: bigint }
-  | { type: "u32"; value: number };
+  | { type: "u32"; value: number }
+  | { type: "symbol"; value: string };
 
 function toScVal(arg: ScArg): xdr.ScVal {
   switch (arg.type) {
@@ -30,6 +31,8 @@ function toScVal(arg: ScArg): xdr.ScVal {
       return nativeToScVal(arg.value, { type: "u64" });
     case "u32":
       return nativeToScVal(arg.value, { type: "u32" });
+    case "symbol":
+      return xdr.ScVal.scvSymbol(arg.value);
   }
 }
 
