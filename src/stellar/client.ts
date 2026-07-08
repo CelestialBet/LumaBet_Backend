@@ -17,7 +17,7 @@ export async function callContractView<T>(
   const operation = contract.call(method, ...args);
 
   // Build a minimal transaction to simulate
-  const { TransactionBuilder, Account, Networks, BASE_FEE, Transaction } =
+  const { TransactionBuilder, Account, Networks, BASE_FEE } =
     await import("@stellar/stellar-sdk");
 
   const source = new Account(

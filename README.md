@@ -18,8 +18,9 @@ pnpm install
 cp .env.example .env   # fill in DATABASE_URL, STELLAR_*, CONTRACT IDs, JWT_SECRET
 
 # Run migrations
-psql "$DATABASE_URL" -f src/db/migrations/001_initial.sql
+psql "$DATABASE_URL" -f src/db/migrations/001_init.sql
 psql "$DATABASE_URL" -f src/db/migrations/002_coinflip.sql
+psql "$DATABASE_URL" -f src/db/migrations/003_dice.sql
 
 pnpm dev               # http://localhost:3001
 ```
@@ -54,6 +55,17 @@ pnpm dev               # http://localhost:3001
 | POST   | `/api/games/coinflip/cancel`          | Cancel a timed-out uncommitted bet          |
 | GET    | `/api/games/coinflip/status/:address` | Latest bet status for a player              |
 | GET    | `/api/games/coinflip/history`         | Paginated bet history (`?playerAddress=&limit=&offset=`) |
+
+### Dice (`/api/games/dice`)
+
+| Method | Route                                | Description                                          |
+|--------|---------------------------------------|------------------------------------------------------|
+| POST   | `/api/games/dice/place`               | Phase 1 — escrow the stake, returns place_bet XDR    |
+| POST   | `/api/games/dice/roll`                | Phase 2 — submit signed place_bet, get roll_dice XDR |
+| POST   | `/api/games/dice/resolve`             | Phase 3 — submit signed roll_dice, get claim/resolve XDR |
+| POST   | `/api/games/dice/finalize`            | Phase 4 — submit signed resolve tx, get final outcome |
+| GET    | `/api/games/dice/status/:address`     | Latest bet status for a player                       |
+| GET    | `/api/games/dice/history`             | Paginated bet history (`?playerAddress=&limit=&offset=`) |
 
 ### Stats
 
